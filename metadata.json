@@ -1,0 +1,6 @@
+{
+  "name": "Bernice Hairplace Lagos",
+  "description": "Curating raw, virgin single-donor hair extensions, bespoke closures, and HD lace units in Lagos, Nigeria.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
