@@ -1,165 +1,141 @@
-# 👑 Bernice Hairplace Lagos — Production E-Commerce Store
+# Bernice Hairplace Lagos — E-Commerce Store
 
-> Luxury Raw Hair Extensions, Bespoke Couture Units & HD Lace Closures. Crafted with 100% single-donor cuticle-aligned hair for discerning clientele across Lagos, Abuja, London, and worldwide.
+Luxury raw hair extensions, closures and HD lace units. A React 19 + Vite storefront with Google sign-in,
+a Supabase database, Paystack payments, and Mailgun confirmation emails. It is deployed on Vercel from GitHub.
 
----
+## Tech stack
 
-## 🚀 Live Demo & Preview
+| Concern | Service |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite 8, Tailwind CSS v4 |
+| Auth | Supabase Auth with the **Google** provider (OAuth client from Google Cloud Console) |
+| Database | Supabase Postgres with row-level security |
+| Payments | Paystack (Inline popup, server-side initialize/verify, and a signed webhook) |
+| Email | Mailgun (order confirmations) |
+| Hosting | Vercel (static SPA and Node serverless functions in `api/`) |
+| CI | GitHub Actions: typecheck and build on every push and PR |
 
-- **Vite SPA** built with React 19, TypeScript, Tailwind CSS v4, Motion, Lucide Icons, and Canvas Confetti.
-- Integrated **Paystack Multi-Channel Checkout** simulation with 256-bit SSL encryption.
-- **Instant Search & Multi-Criteria Filtering** (names, descriptions, categories, price ranges, textures).
-- **VIP Studio Concierge & Head Measurement Custom Couture Wig Builder**.
+## How it works
 
----
+**Sign-in.** Customers sign in with Google (Supabase Auth). The first sign-in creates a row in `profiles`.
+Browsing and adding to the bag work without an account. **Checkout requires sign-in.** When a customer signs in,
+their bag and wishlist merge with their account and stay in sync across devices.
 
-## 🛠 Tech Stack
+**Checkout and payment.**
 
-- **Framework**: [React 19](https://react.dev/) + [Vite 6](https://vitejs.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **Typography**: Bodoni Moda (Editorial Display Serif) & Plus Jakarta Sans (Modern Clean Sans)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Animations**: [Motion](https://motion.dev/) & [canvas-confetti](https://www.npmjs.com/package/canvas-confetti)
-- **Deployment Targets**: [Vercel](https://vercel.com/) / [GitHub Pages](https://pages.github.com/) / [Netlify](https://www.netlify.com/)
+1. `POST /api/paystack/initialize` (requires the customer's Supabase access token) validates the delivery details,
+   **prices the bag from the catalog on the server**, saves a `pending_payment` order with its `order_items`,
+   saves the address to the customer's profile, and starts a Paystack transaction.
+2. The Paystack popup opens. When it closes, the browser calls `GET /api/paystack/verify`, which confirms the
+   payment with Paystack, checks that the amount matches the order, marks the order `paid`, and sends the
+   **Mailgun confirmation email**.
+3. `POST /api/paystack/webhook` (signed by Paystack) does the same if the customer closes the browser early.
+   Both paths are idempotent: an order is marked paid once and emailed exactly once.
 
----
+**Data in Supabase.** The tables are `profiles`, `orders`, `order_items`, `cart_items`, `wishlist_items`,
+`custom_wig_requests` and `newsletter_subscribers`. Customers can read only their own data. Orders can be created
+and changed only by the server. The **product catalog stays in code** (`src/data/products.ts`).
 
-## 📦 How to Deploy on GitHub
+**Managing orders.** Use Supabase → Table Editor → `orders`. Move `status` through
+`paid → processing → in_transit → delivered` and optionally set `waybill_number`. Customers see the changes
+under **My Orders**.
 
-### 1. Initialize Git and Push to GitHub
+## Setup
 
-```bash
-# 1. Initialize a new Git repository (if not already done)
-git init
+### 1. Supabase
 
-# 2. Stage all files
-git add .
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor**, paste the contents of `supabase/migrations/20261006120000_initial_schema.sql` and run it.
+   With the Supabase CLI you can instead run `supabase link` and then `supabase db push`.
+3. In **Project Settings → API**, copy the Project URL, the anon/publishable key and the service-role key.
 
-# 3. Create your initial commit
-git commit -m "feat: initial release of Bernice Hairplace Lagos e-commerce store"
+### 2. Google sign-in (Google Cloud Console)
 
-# 4. Create a repository on GitHub (e.g. named 'bernice-hairplace-ecommerce')
-# Link your local repo to GitHub:
-git branch -M main
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/bernice-hairplace-ecommerce.git
+1. In [Google Cloud Console](https://console.cloud.google.com/), create or select a project.
+2. Go to **APIs & Services → OAuth consent screen**. Choose *External* and fill in the app name, support
+   email and logo. Add the `email`, `profile` and `openid` scopes, then publish the app.
+3. Go to **APIs & Services → Credentials → Create credentials → OAuth client ID → Web application**:
+   - **Authorized JavaScript origins**: `https://your-domain.com` and `http://localhost:3000`
+   - **Authorized redirect URIs**: `https://<your-project-ref>.supabase.co/auth/v1/callback`
+4. Copy the Client ID and Client secret into **Supabase → Authentication → Sign In / Providers → Google** and enable it.
+5. In **Supabase → Authentication → URL Configuration**:
+   - **Site URL**: `https://your-domain.com`
+   - **Redirect URLs**: `https://your-domain.com/**`, `http://localhost:3000/**`, and for Vercel previews
+     `https://*-<your-vercel-team>.vercel.app/**`
 
-# 5. Push to GitHub
-git push -u origin main
-```
+### 3. Mailgun
 
----
+1. In Mailgun, add and verify a sending domain (for example `mg.bernicehairplace.com`) by adding the DNS records it shows.
+2. Create a private API key under **API Security**.
+3. Set `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_FROM_EMAIL`, and `MAILGUN_REGION` (`eu` if the domain is in the EU region).
+   On a Mailgun sandbox domain, email is delivered only to authorized recipients.
 
-## ⚡ How to Deploy on Vercel
+### 4. Paystack
 
-### Method 1: Deploy via Vercel Web Dashboard (Recommended)
+1. Copy your secret key from **Settings → API Keys & Webhooks** into `PAYSTACK_SECRET_KEY`.
+2. Set the **Webhook URL** to `https://your-domain.com/api/paystack/webhook`.
 
-1. Go to [vercel.com/new](https://vercel.com/new).
-2. Log in with your **GitHub account**.
-3. Import your `bernice-hairplace-ecommerce` repository.
-4. Vercel will automatically detect **Vite**:
-   - **Framework Preset**: `Vite`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-   - **Install Command**: `npm install`
-5. *(Optional)* In the **Environment Variables** section, configure the variables listed in `.env.example`:
-   ```env
-   VITE_APP_URL=https://your-domain.vercel.app
-   VITE_PAYSTACK_PUBLIC_KEY=pk_test_...
-   ```
-6. Click **Deploy**. Your luxury store will be live in ~30 seconds with automatic HTTPS and global edge CDN caching!
+### 5. Vercel
 
----
+1. Import the GitHub repository at [vercel.com/new](https://vercel.com/new). Vite is detected automatically.
+2. Add every variable from `.env.example` under **Settings → Environment Variables**.
+   Use `sk_test_…` for Preview and `sk_live_…` for Production.
+3. Deploy. After this, every push to `main` deploys to production, and every branch or PR gets a preview URL.
 
-### Method 2: Deploy via Vercel CLI
-
-```bash
-# 1. Install Vercel CLI globally
-npm i -g vercel
-
-# 2. Log in to your Vercel account
-vercel login
-
-# 3. Deploy to preview
-vercel
-
-# 4. Deploy to production
-vercel --prod
-```
-
----
-
-## 💻 Local Development
+## Local development
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Copy environment file
-cp .env.example .env
-
-# 3. Start development server (running on http://localhost:3000)
-npm run dev
-
-# 4. Run type checking & linting
-npm run lint
-
-# 5. Build for production
-npm run build
-
-# 6. Preview production build locally
-npm run preview
+npm run dev          # storefront only at http://localhost:3000 (no /api functions)
 ```
 
----
+For sign-in, checkout and email end to end, run the functions too:
 
-## 📂 Project Architecture
-
-```
-├── .github/
-│   └── workflows/
-│       └── ci.yml             # Automated GitHub Actions CI workflow
-├── src/
-│   ├── components/
-│   │   ├── Header.tsx         # Brand header with live search & cart counter
-│   │   ├── Footer.tsx         # Studio assurance, newsletter & links
-│   │   ├── CartDrawer.tsx     # Luxury slide-out shopping bag
-│   │   ├── PaystackModal.tsx  # Secure Paystack payment handshake simulator
-│   │   ├── QuickViewModal.tsx # Fast product preview & length selection
-│   │   └── WhatsAppConciergeModal.tsx # VIP custom consultation modal
-│   ├── context/
-│   │   └── ShopContext.tsx    # State store for cart, currency, filters, orders
-│   ├── data/
-│   │   ├── products.ts        # Comprehensive catalog of raw bundles & wigs
-│   │   └── initialData.ts     # User profile, addresses & past order history
-│   ├── types/
-│   │   └── index.ts           # Type definitions for products, cart, and orders
-│   ├── views/
-│   │   ├── HomeView.tsx       # Editorial homepage with visualizer & bestsellers
-│   │   ├── CatalogView.tsx    # Search, category filters & price sliders
-│   │   ├── ProductDetailView.tsx # Multi-angle gallery & length selector
-│   │   ├── CheckoutView.tsx   # Multi-step checkout with delivery options
-│   │   ├── PaymentStatusView.tsx # Order confirmation & tracking
-│   │   ├── AccountView.tsx    # Customer dashboard & order history
-│   │   ├── CollectionsView.tsx # Curated category showcase
-│   │   ├── AboutView.tsx      # Sourcing manifesto & hair science
-│   │   ├── CustomOrderModal.tsx # Head measurement & bespoke wig builder
-│   │   └── DocumentationView.tsx # Technical architecture & API integration
-│   ├── App.tsx                # App root with view routing & notification toasts
-│   ├── index.css              # Custom typography and styling
-│   └── main.tsx               # Application entry point
-├── vercel.json                # Vercel deployment & routing configuration
-├── index.html                 # HTML entry with SEO & Google Fonts
-├── vite.config.ts             # Vite configuration with Tailwind CSS plugin
-├── tsconfig.json              # TypeScript strict configuration
-└── package.json               # Scripts & dependencies
+```bash
+npm i -g vercel
+vercel link
+vercel env pull .env.local
+vercel dev --listen 3000
 ```
 
----
+Other scripts: `npm run lint` (typecheck), `npm run build`, `npm run preview`.
 
-## 🔒 Security & Performance Features
+## Docker (frontend)
 
-- **SPA Routing Rewrite**: Configured in `vercel.json` to prevent 404s on deep links and sub-routes.
-- **Security Headers**: Includes `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `X-XSS-Protection`.
-- **Immutable Asset Caching**: 1-year CDN caching on static Vite bundles in `/assets/`.
-- **Zero Runtime Errors**: 100% typechecked with strict TypeScript compiler rules.
+The `Dockerfile` builds the storefront with Node and serves it from nginx on port **8080**, with SPA routing,
+caching, security headers and a `/healthz` endpoint. The payment functions in `api/` are Vercel serverless
+functions, so the container forwards `/api/*` to a deployment that runs them, set by `API_UPSTREAM`.
+
+```bash
+# VITE_* values are baked in at build time (public values only)
+docker build -t bernice-hairplace-web \
+  --build-arg VITE_SUPABASE_URL=https://<ref>.supabase.co \
+  --build-arg VITE_SUPABASE_ANON_KEY=<anon-key> \
+  --build-arg VITE_WHATSAPP_NUMBER=2348012345678 .
+
+docker run -p 8080:8080 -e API_UPSTREAM=https://your-app.vercel.app bernice-hairplace-web
+```
+
+You can also put the values in `.env` and run `docker compose up --build`, then open <http://localhost:8080>.
+
+Notes:
+
+- `API_UPSTREAM` must not end with a slash.
+- Add the container's URL (for example `http://localhost:8080/**`) to Supabase's **Redirect URLs** and Google's
+  **Authorized JavaScript origins** so Google sign-in can return to it.
+- Keep the Paystack webhook pointed at the Vercel deployment directly.
+
+## Project structure
+
+```
+api/paystack/        # Vercel functions: initialize, verify, webhook
+server/              # Server-only modules: Supabase admin + auth, orders, Paystack, Mailgun, email template
+supabase/migrations/ # Database schema, row-level security policies, triggers
+src/
+  components/        # Header, Footer, CartDrawer, GoogleSignInButton, modals
+  context/           # ShopContext: auth, bag/wishlist sync, orders, checkout and payment flow
+  data/products.ts   # Product catalog (single source of truth for prices)
+  lib/               # pricing, Supabase client, Paystack helpers, order row mapping
+  views/             # Home, Catalog, Product, Checkout, Order status, My Orders, etc.
+vercel.json          # SPA rewrites (excluding /api), caching and security headers
+```

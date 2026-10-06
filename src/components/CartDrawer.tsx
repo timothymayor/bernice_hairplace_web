@@ -1,6 +1,7 @@
 import React from 'react';
 import { useShop } from '../context/ShopContext';
-import { X, Trash2, Plus, Minus, ShoppingBag, ShieldCheck, ArrowRight, Lock } from 'lucide-react';
+import { FREE_DELIVERY_THRESHOLD } from '../lib/pricing';
+import { X, Trash2, Plus, Minus, ShoppingBag, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -13,13 +14,12 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     setCurrentView,
     formatPrice,
-    openPaystackPayment,
   } = useShop();
 
   if (!isCartOpen) return null;
 
-  const isFreeDeliveryEligible = cartSubtotal >= 150000;
-  const progressPercent = Math.min(100, Math.round((cartSubtotal / 150000) * 100));
+  const isFreeDeliveryEligible = cartSubtotal >= FREE_DELIVERY_THRESHOLD;
+  const progressPercent = Math.min(100, Math.round((cartSubtotal / FREE_DELIVERY_THRESHOLD) * 100));
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -187,17 +187,6 @@ export const CartDrawer: React.FC = () => {
                 >
                   <span>Proceed to Delivery & Checkout</span>
                   <ArrowRight className="w-4 h-4 text-[#C5A880]" />
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    openPaystackPayment();
-                  }}
-                  className="w-full h-11 bg-white hover:bg-[#FBF9F6] border border-[#C5A880] text-[#1A1412] text-xs font-bold uppercase tracking-wider rounded flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Lock className="w-3.5 h-3.5 text-[#725B38]" />
-                  <span>Instant Paystack Checkout</span>
                 </button>
               </div>
 

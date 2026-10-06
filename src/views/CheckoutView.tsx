@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useShop } from '../context/ShopContext';
 import {
   Lock,
@@ -10,7 +10,10 @@ import {
   Building,
   Truck,
   ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
+import { EXPRESS_DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '../lib/pricing';
 
 export const CheckoutView: React.FC = () => {
   const {
@@ -23,15 +26,24 @@ export const CheckoutView: React.FC = () => {
     deliveryFee,
     orderTotal,
     formatPrice,
-    openPaystackPayment,
+    payWithPaystack,
+    paymentPhase,
+    setCurrentView,
     user,
-    loginWithGoogle,
-    showToast,
+    authReady,
   } = useShop();
 
-  const [deliveryNotes, setDeliveryNotes] = useState(checkoutAddress.deliveryNotes || 'Notify front estate gate security; call upon arrival at the gatehouse.');
+  const isPaying = paymentPhase !== 'idle';
+  const payButtonLabel =
+    paymentPhase === 'starting'
+      ? 'Starting secure payment…'
+      : paymentPhase === 'awaiting_customer'
+        ? 'Complete payment in the Paystack window'
+        : paymentPhase === 'verifying'
+          ? 'Confirming payment…'
+          : `Pay ${formatPrice(orderTotal)} via Paystack`;
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof typeof checkoutAddress, value: string) => {
     setCheckoutAddress((prev) => ({
       ...prev,
       [field]: value,
@@ -40,20 +52,49 @@ export const CheckoutView: React.FC = () => {
 
   const handleSubmitCheckout = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkoutAddress.firstName || !checkoutAddress.streetAddress || !checkoutAddress.phone) {
-      showToast('Missing Details', 'Please provide delivery address & phone number.', 'error');
-      return;
-    }
-    openPaystackPayment();
+    payWithPaystack();
   };
 
-  const handleGoogleAutofill = () => {
-    loginWithGoogle();
-    if (user) {
-      setCheckoutAddress(user.defaultAddress);
-      showToast('Autofilled with Google', 'Delivery coordinates loaded from profile.', 'success');
-    }
-  };
+  if (cart.length === 0) {
+    return (
+      <div className="max-w-md mx-auto py-24 px-4 text-center">
+        <h2 className="font-editorial text-3xl text-[#1A1412] mb-2">Your bag is empty</h2>
+        <p className="text-sm text-[#807571] mb-6">Add your favourite bundles, closures or units before checking out.</p>
+        <button
+          onClick={() => setCurrentView('shop')}
+          className="px-6 py-3 bg-[#1A1412] hover:bg-[#201A18] text-white text-xs uppercase font-bold tracking-wider rounded"
+        >
+          Continue Shopping
+        </button>
+      </div>
+    );
+  }
+
+  if (!authReady) {
+    return (
+      <div className="max-w-md mx-auto py-24 px-4 text-center text-sm text-[#807571]">
+        <RefreshCw className="w-6 h-6 text-[#C5A880] animate-spin mx-auto mb-3" />
+        Loading your account…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto py-20 px-4 text-center">
+        <span className="text-[10px] uppercase tracking-widest font-bold text-[#725B38]">Secure Checkout</span>
+        <h2 className="font-editorial text-3xl text-[#1A1412] mt-1 mb-2">Sign in to check out</h2>
+        <p className="text-sm text-[#807571] mb-8 leading-relaxed">
+          Sign in with your Google account to place your order. We'll save your delivery details, keep your bag in sync,
+          and email your order confirmation.
+        </p>
+        <GoogleSignInButton returnPath="/checkout" className="w-full" />
+        <p className="text-xs text-[#807571] mt-6">
+          {cart.length} item(s) in your bag • {formatPrice(cartSubtotal)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col w-full bg-[#FBF9F6] min-h-screen">
@@ -98,7 +139,7 @@ export const CheckoutView: React.FC = () => {
           <div className="hidden md:flex items-center gap-1.5 text-[#4E4542]">
             <ShieldCheck className="w-4 h-4 text-[#725B38]" />
             <span className="text-[11px] uppercase tracking-wider font-bold">
-              Official Paystack Partner
+              Payments by Paystack
             </span>
           </div>
         </div>
@@ -110,36 +151,19 @@ export const CheckoutView: React.FC = () => {
           {/* Left Column: Input Forms */}
           <div className="lg:col-span-7 flex flex-col gap-6">
             <div className="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-[#EAE8E5]">
-              {/* Google Autofill Pill */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 bg-[#F5F3F0]/60 p-3 rounded-lg border border-[#EAE8E5]">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#4E4542]">
-                  Instant Autofill
-                </span>
-                <button
-                  type="button"
-                  onClick={handleGoogleAutofill}
-                  className="flex items-center justify-center gap-2 bg-white hover:bg-[#F5F3F0] text-[#1A1412] px-4 py-2 rounded shadow-sm border border-[#D1C4C0] text-xs font-semibold transition-all"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path
-                      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  <span>Continue with Google</span>
-                </button>
+              {/* Signed-in account */}
+              <div className="flex items-center gap-3 mb-6 bg-[#F5F3F0]/60 p-3 rounded-lg border border-[#EAE8E5]">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <span className="w-8 h-8 rounded-full bg-[#1A1412] text-white text-xs font-bold flex items-center justify-center">
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[#1A1412] truncate">{user.fullName}</p>
+                  <p className="text-[11px] text-[#807571] truncate">Signed in as {user.email}</p>
+                </div>
               </div>
 
               {/* Contact Information */}
@@ -177,7 +201,7 @@ export const CheckoutView: React.FC = () => {
                       type="tel"
                       required
                       value={checkoutAddress.phone.replace('+234', '').trim()}
-                      onChange={(e) => handleInputChange('phone', `+234 ${e.target.value}`)}
+                      onChange={(e) => handleInputChange('phone', e.target.value.trim() ? `+234 ${e.target.value}` : '')}
                       placeholder="814 982 4509"
                       className="w-full h-12 px-2 bg-transparent text-sm text-[#1A1412] focus:outline-none"
                     />
@@ -228,11 +252,11 @@ export const CheckoutView: React.FC = () => {
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] uppercase tracking-wider font-bold text-[#1A1412]">
-                    Street Address *
+                    Street Address {fulfillmentMethod === 'courier_express' ? '*' : '(optional for pickup)'}
                   </label>
                   <input
                     type="text"
-                    required
+                    required={fulfillmentMethod === 'courier_express'}
                     value={checkoutAddress.streetAddress}
                     onChange={(e) => handleInputChange('streetAddress', e.target.value)}
                     placeholder="Plot 14 Admiralty Way, Lekki Peninsula"
@@ -292,8 +316,8 @@ export const CheckoutView: React.FC = () => {
                   </label>
                   <textarea
                     rows={2}
-                    value={deliveryNotes}
-                    onChange={(e) => setDeliveryNotes(e.target.value)}
+                    value={checkoutAddress.deliveryNotes || ''}
+                    onChange={(e) => handleInputChange('deliveryNotes', e.target.value)}
                     placeholder="Notify front estate gate security; call upon arrival at the gatehouse."
                     className="w-full p-4 bg-[#F5F3F0] rounded text-sm text-[#1A1412] focus:outline-none focus:bg-white border border-[#D1C4C0] focus:border-[#725B38] transition-colors"
                   />
@@ -328,10 +352,12 @@ export const CheckoutView: React.FC = () => {
                           Express Lagos Courier
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-[#725B38]">₦4,500</span>
+                      <span className="text-xs font-bold text-[#725B38]">
+                        {cartSubtotal >= FREE_DELIVERY_THRESHOLD ? 'Free' : formatPrice(EXPRESS_DELIVERY_FEE)}
+                      </span>
                     </div>
                     <p className="text-xs text-[#807571] pl-6 leading-relaxed">
-                      Same-day Island dispatch if ordered before 2 PM. Real-time driver WhatsApp tracker included.
+                      Same-day Lagos dispatch if ordered before 2 PM. Free on orders over {formatPrice(FREE_DELIVERY_THRESHOLD)}.
                     </p>
                   </label>
 
@@ -487,14 +513,19 @@ export const CheckoutView: React.FC = () => {
               {/* Paystack Submission Trigger */}
               <button
                 type="submit"
-                className="w-full h-14 bg-[#1A1412] hover:bg-[#201A18] text-white text-xs font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-98"
+                disabled={isPaying}
+                className="w-full h-14 bg-[#1A1412] hover:bg-[#201A18] disabled:opacity-70 disabled:cursor-wait text-white text-xs font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-98"
               >
-                <Lock className="w-4 h-4 text-[#C5A880]" />
-                <span>Pay {formatPrice(orderTotal)} via Paystack</span>
+                {isPaying ? (
+                  <RefreshCw className="w-4 h-4 text-[#C5A880] animate-spin" />
+                ) : (
+                  <Lock className="w-4 h-4 text-[#C5A880]" />
+                )}
+                <span>{payButtonLabel}</span>
               </button>
 
               <p className="text-center text-[11px] text-[#807571] mt-3 leading-relaxed">
-                You will be securely redirected to Paystack to authenticate your payment. Upon successful confirmation, an automated dispatch notification is sent immediately.
+                Payment is processed securely by Paystack and charged in Naira (NGN). Your order is confirmed as soon as Paystack verifies the payment, and a confirmation email is sent to the address above.
               </p>
 
               <div className="mt-4 pt-3 flex items-center justify-center gap-4 text-xs text-[#807571] border-t border-[#EAE8E5]">

@@ -36,19 +36,19 @@ export const HomeView: React.FC = () => {
       name: 'Cambodian Raw Bone Straight',
       origin: '100% Raw Cambodian Donor',
       desc: 'Sleek, mirror shine with natural heavy blunt ends. Flat-iron pressed with intact cuticles that withstand high humidity without puffing.',
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCkuQoxES7kMlEH6Ack8EMhc2kmKLRsflWN8waJJRvms2xOh96ODB8rZgGAzi2ZG7wRJK-A_cNcC_uOwawJN1CykIrwaRtR7TbUss653SBbO7mj2EmgDznIJTgrNy6UktYFF_fwfmf0EQ7GD2DhZjxkBlboOhDdSnH-fUkycCOlCo_NnOnN2c90yoaZfSaRsvGFrWnimJ59QIehP-F2wadFPZ4FSPykMTSzRxb2bQitJSDJUt-tw0lV',
+      img: '/images/img-21-30982e50d2.jpg',
     },
     deepwave: {
       name: 'Burmese Lush Deep Wave',
       origin: 'Single Donor Burma Virgin Harvest',
       desc: 'Natural bouncy spiral pattern that stays resilient without tangling in tropical warmth. Low-maintenance luster that defines effortlessly with water.',
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDLzuJJ02llQglblQQVt5xBsnPXlqPKVEA2zBOJX1x5Lfylc-ew_eM-BQMIh-jyvMhuVQFo1o1xrnER04TUyi3aMQ7G7cqo1BtROLoAW9DQ7wecMputSpw5w89jQcU4RuH6mBHmZazBGZW-G8LOo9_g3A6n7E9HJOurvxOqPBuJP_Nymryp9FwF_jpWoQ9qGMPdKKrzqQVrWA6q71ykaUd5i33FdjBMgTlkx7IvyaFSEtosEA9_8yM',
+      img: '/images/img-15-87e35e4d0f.jpg',
     },
     naturalwavy: {
       name: 'Vietnamese Natural Wavy',
       origin: 'Raw Vietnamese Mountain Harvest',
       desc: 'Organic soft S-curl with ultra-dense strands. Yields breathtaking body curls and holds pin-curls for 48+ hours in Lagos climate.',
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBXDM8I80oe2gVZXC-LMsn_Rg5fhCQjf9uun5xcyZpdRGjLSJ9YoxGoNFVFGtCBX3zQWn3M7-I9JpSS9msnWJTC01UH2-ZzdSVdjEzNEEVxbxXYgAhU59mhTSLOy2YL8FnVR1vaJq_WgUsGZWsW6F62vLHD12ukmR59sQMpAHV1rM5HpcbOajVtyf4tyMNf936fZ9w54nz97T3CDKloylQkSVjhACyERz-NhBVdD7L628VpHdlXvzy9',
+      img: '/images/img-22-562ad69136.jpg',
     },
   };
 
@@ -166,7 +166,7 @@ export const HomeView: React.FC = () => {
             <div className="lg:col-span-6 relative">
               <div className="relative w-full aspect-[4/5] bg-[#F5F3F0] overflow-hidden rounded-xl shadow-2xl group">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxazG0n64YuZo2B7kdqQcnoncwygq8mtiqImKaQ805_kL5Zfh_FjYSj_VtxwU374N0O_XMQ38OHbhde0hTaMweZHgDiTI2-SfqlL0bE13a_SPykl2wun0RxYgTKR32y6d2qlKZYBgf51odhDN_1bsxn7VZ7aX1Of9F-c6Mavdpe9sHCr3Ua-1fMMHJRhiwqR-zXdhTIw8_8YMT4o0fiwfLaloY3NpS7cRYw-NVZwJOt90fioPfzeY"
+                  src="/images/img-01-57435c102b.jpg"
                   alt="Editorial beauty portrait of an elegant Nigerian woman with flowing raw hair extensions"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
@@ -238,7 +238,7 @@ export const HomeView: React.FC = () => {
             >
               <div className="aspect-[3/4] relative overflow-hidden bg-[#EFEEEB]">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwN_TKOKEtrkhthfi6nhO6OLZSbxKggolKjfmHwFBh-ci4l79bn5_0jG5P6L4OPspHCJ37OwiyaFMQOGT-yF0q6TJz50c5nKrS76lsRkGt21PxcPwqwAi1CPRtiDOENObseMyrqfLdeXMTWunL6cQIHxp-DpvAZ3ds5jUdFaxTZO2RP9Qu_8URmNzMIH_o_8yehUwr1krb4oMO4wB_SAP7Y2Ne4Fy7iriykvcz5U00DaHwK7nhyPi4"
+                  src="/images/img-23-8f681b20be.jpg"
                   alt="Raw Virgin Bundles"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -267,7 +267,7 @@ export const HomeView: React.FC = () => {
             >
               <div className="aspect-[3/4] relative overflow-hidden bg-[#EFEEEB]">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaRys2c0INHuaurtR70FtmYd8vtCLQQnODyCAgLpGJMCKmG6IIc5tqa800lnod_w18lN21xE2kI1_CTn1YSuXdNp1Z-S4tnBoLKpncZugSKy1qZS3-602NUhxIIqqgPCaM2LSzKimNzhk3vv192vmB_PPGgTcsnjKMeYPCPkHf4tDL_m3OeViHHsvQvacRNxj3iuL3DiynOt8-zG2xLyS6VbC6Y-H70i9QfmtzHMCBE5YhqpYN3S2Q"
+                  src="/images/img-16-b8d05c66e5.jpg"
                   alt="HD Lace Units"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -296,7 +296,7 @@ export const HomeView: React.FC = () => {
             >
               <div className="aspect-[3/4] relative overflow-hidden bg-[#EFEEEB]">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSztRFzIYr_0wp6LGY8hD1Omdtukg2Tp_x28vytJa_HdkKYERGCRLhwiw7wCC-lFAqmgeoMZnnIfJ-pFPk0GrdOXopTjxnOsCzYwawUy5Wm5t7RJC04PhHFuNevtniRVeL5kHWPG4-PhN-bKxylw94PqxqjI35mt2cW3fi4cjW6XXBVLFwYkhHt1k4vwk-dW16qUdc4RG3hfXIp68HSb5ye6M9amLeoYkM80ostTXHlUT8j0sHihWS"
+                  src="/images/img-12-9ac26c2b17.jpg"
                   alt="Closures & Frontals"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -325,7 +325,7 @@ export const HomeView: React.FC = () => {
             >
               <div className="aspect-[3/4] relative overflow-hidden bg-[#EFEEEB]">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBP1liuPPKMk8c5ah8ZHNx1LZE4l6oFiSaMqKxOEANiGfHbfiXBKgnyZsYoyCvWxRq1b8-k0wJkhFmiluPTGjjCWY-w_UNH8vUJvzn33ODFIZyLqOKXkYp2r2iQcu9JjV93ZDgVnK7DPDIw34xry3Ohza3x5lG2uTa1uFRRRn_Syulrs_yKPMcIBqb7FksGoeM_vdmrFidAYRzjH-EppLDaV3Anh5CvvGwErXAeff2bFyNJ49NVkCPo"
+                  src="/images/img-24-a5287e6eaa.jpg"
                   alt="Silk Care & Elixirs"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -623,7 +623,7 @@ export const HomeView: React.FC = () => {
             <div className="lg:col-span-5 relative order-2 lg:order-1">
               <div className="aspect-[3/4] bg-[#EFEEEB] rounded-xl overflow-hidden shadow-lg border border-[#EAE8E5]">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA8Ct7tbVWgvCidkt56BtQok6gnyuKUXsp_5egmlwYuWtWhGzt4Njl2m2zqqIs9yG869a35fJwbYKC2rg99PFQe8EPd2AsaJdDn8FLtZcsdpiQsjmzjpqjVDXbVnly2xTj0jNw_CEV8ffuwN5pf_hrnWhkNY-dUGXNkCy4KnFLM2LXBmbLll1OJEbJ1YQqvDKNkMFEV0pE3gsPbNnlvfIZSKf6c9-QlpVIDFj5a9SemBllIRcrTAyl"
+                  src="/images/img-25-6142051ada.jpg"
                   alt="Artisan hair specialist inspecting raw hair wefts"
                   className="w-full h-full object-cover"
                 />

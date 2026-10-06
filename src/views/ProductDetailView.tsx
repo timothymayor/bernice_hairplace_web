@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
+import { getUnitPrice } from '../lib/pricing';
 import { Product } from '../types';
 import {
   ShieldCheck,
@@ -21,7 +22,6 @@ export const ProductDetailView: React.FC = () => {
     selectedProduct,
     products,
     addToCart,
-    openPaystackPayment,
     formatPrice,
     setCurrentView,
     showToast,
@@ -40,19 +40,7 @@ export const ProductDetailView: React.FC = () => {
   const [openDelivery, setOpenDelivery] = useState(false);
   const [openLongevity, setOpenLongevity] = useState(false);
 
-  const calculateBundlePrice = () => {
-    let base = product.price;
-    // Length adjustments if any
-    const diff = selectedLength - product.defaultLength;
-    if (diff > 0) {
-      base += diff * 15000;
-    } else if (diff < 0) {
-      base += diff * 10000;
-    }
-    return base;
-  };
-
-  const unitPrice = calculateBundlePrice();
+  const unitPrice = getUnitPrice(product, selectedLength);
   const totalPrice = unitPrice * bundleQuantity;
   const isMultiBundle = bundleQuantity >= 3;
 
@@ -62,7 +50,7 @@ export const ProductDetailView: React.FC = () => {
 
   const handleInstantPaystack = () => {
     addToCart(product, selectedLength, bundleQuantity);
-    openPaystackPayment();
+    setCurrentView('checkout');
   };
 
   const handleAddRecommendation = () => {
@@ -326,7 +314,7 @@ export const ProductDetailView: React.FC = () => {
                 className="w-full py-3.5 bg-[#FBF9F6] hover:bg-[#F5F3F0] border border-[#C5A880] text-[#1A1412] text-xs font-bold uppercase tracking-[0.18em] rounded transition-all flex items-center justify-center gap-2"
               >
                 <Lock className="w-4 h-4 text-[#725B38]" />
-                <span>Instant Paystack Checkout</span>
+                <span>Buy Now</span>
               </button>
             </div>
 

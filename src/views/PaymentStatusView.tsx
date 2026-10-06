@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useShop } from '../context/ShopContext';
 import {
   CheckCircle,
@@ -20,77 +20,40 @@ export const PaymentStatusView: React.FC = () => {
     orders,
     formatPrice,
     setCurrentView,
-    openPaystackPayment,
+    recheckPayment,
+    paymentPhase,
     setIsConciergeOpen,
-    showToast,
   } = useShop();
 
-  const [activeTab, setActiveTab] = useState<'success' | 'pending' | 'failed'>(() => {
-    if (currentOrder?.paymentStatus === 'failed') return 'failed';
-    if (currentOrder?.paymentStatus === 'pending') return 'pending';
-    return 'success';
-  });
-
-  const [isVerifying, setIsVerifying] = useState(false);
-
   const order = currentOrder || orders[0];
+  const isVerifying = paymentPhase === 'verifying';
 
-  const handleRefreshVerification = () => {
-    setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
-      setActiveTab('success');
-      showToast('Payment Verified', 'Paystack confirmed transaction reference.', 'success');
-    }, 1200);
-  };
+  if (!order) {
+    return (
+      <div className="max-w-md mx-auto py-24 px-4 text-center">
+        <h2 className="font-editorial text-3xl text-[#1A1412] mb-2">No order to show</h2>
+        <p className="text-sm text-[#807571] mb-6">Your orders will appear here once you check out.</p>
+        <button
+          onClick={() => setCurrentView('shop')}
+          className="px-6 py-3 bg-[#1A1412] hover:bg-[#201A18] text-white text-xs uppercase font-bold tracking-wider rounded"
+        >
+          Start Shopping
+        </button>
+      </div>
+    );
+  }
+
+  const activeTab: 'success' | 'pending' | 'failed' =
+    order.paymentStatus === 'success'
+      ? 'success'
+      : order.paymentStatus === 'failed' || order.paymentStatus === 'reversed'
+        ? 'failed'
+        : 'pending';
+  const isPickup = order.fulfillmentMethod === 'studio_pickup';
 
   return (
     <div className="flex flex-col w-full bg-[#FBF9F6] min-h-screen">
       <div className="max-w-[1240px] w-full mx-auto px-4 sm:px-10 py-10 lg:py-14">
-        {/* Interactive State Preview Tabs */}
-        <div className="w-full flex flex-col items-center justify-center mb-10">
-          <div className="inline-flex items-center gap-2 p-1.5 bg-[#EFEEEB] rounded-full shadow-sm max-w-full overflow-x-auto border border-[#EAE8E5]">
-            <button
-              onClick={() => setActiveTab('success')}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'success'
-                  ? 'bg-[#1A1412] text-white shadow'
-                  : 'text-[#4E4542] hover:text-[#1A1412]'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-[#FEDEB2]"></span>
-              <span>Payment Confirmed</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('pending')}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'pending'
-                  ? 'bg-[#1A1412] text-white shadow'
-                  : 'text-[#4E4542] hover:text-[#1A1412]'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-[#725B38]"></span>
-              <span>Pending Verification</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('failed')}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'failed'
-                  ? 'bg-[#1A1412] text-white shadow'
-                  : 'text-[#4E4542] hover:text-[#1A1412]'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-[#BA1A1A]"></span>
-              <span>Payment Failed</span>
-            </button>
-          </div>
-          <p className="text-[10px] uppercase font-bold tracking-widest text-[#807571] mt-2">
-            Interactive State Preview • Lagos Studio Order Engine
-          </p>
-        </div>
-
         {/* VIEW 1: SUCCESS STATE */}
         {activeTab === 'success' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start animate-in fade-in duration-300">
@@ -125,7 +88,7 @@ export const PaymentStatusView: React.FC = () => {
                 </div>
 
                 <p className="text-xs sm:text-sm text-[#4E4542] mb-6 leading-relaxed">
-                  Order <strong className="text-[#1A1412] font-bold">#{order.orderNumber}</strong> has been successfully placed with our Victoria Island studio. A bespoke confirmation dossier has been delivered to{' '}
+                  Order <strong className="text-[#1A1412] font-bold">#{order.orderNumber}</strong> has been successfully placed with our Victoria Island studio. A confirmation email has been sent to{' '}
                   <span className="text-[#1A1412] font-medium underline underline-offset-4 decoration-[#C5A880]">
                     {order.customerEmail}
                   </span>.
@@ -138,14 +101,18 @@ export const PaymentStatusView: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <h2 className="text-xs uppercase tracking-wider font-bold text-[#1A1412]">
-                          Express Dedicated Courier Fulfillment
+                          {isPickup ? 'Studio Pickup' : 'Express Lagos Courier'}
                         </h2>
                         <span className="text-[10px] font-bold text-[#725B38] uppercase">
-                          Tomorrow • by 3:00 PM
+                          {order.estimatedDelivery}
                         </span>
                       </div>
                       <p className="text-xs text-[#807571] mt-1 leading-relaxed">
-                        Processing for direct dispatch to <strong className="text-[#1A1412]">{order.shippingAddress.district || 'Lekki Phase 1, Lagos'}</strong>. Dispatched in temperature-controlled protective satin keepsake packaging.
+                        {isPickup ? (
+                          <>Our Victoria Island studio will contact you on <strong className="text-[#1A1412]">{order.customerPhone}</strong> when your order is ready for collection.</>
+                        ) : (
+                          <>Processing for dispatch to <strong className="text-[#1A1412]">{order.shippingAddress.district}, Lagos</strong>, in protective satin keepsake packaging.</>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -155,12 +122,12 @@ export const PaymentStatusView: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <button
                     onClick={() => {
-                      setCurrentView('account');
+                      setCurrentView('orders');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     className="h-12 px-6 bg-[#1A1412] hover:bg-[#201A18] text-white rounded text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
                   >
-                    <span>View Order in Account</span>
+                    <span>View My Orders</span>
                     <ArrowRight className="w-4 h-4 text-[#C5A880]" />
                   </button>
 
@@ -246,12 +213,10 @@ export const PaymentStatusView: React.FC = () => {
                     <span className="font-semibold text-[#1A1412]">{formatPrice(order.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Lagos Express Dedicated Courier</span>
-                    <span className="text-[#725B38] font-bold uppercase text-[10px]">Complimentary</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Paystack Gateway Processing</span>
-                    <span className="text-[#807571]">₦0</span>
+                    <span>{isPickup ? 'Studio Pickup' : 'Lagos Express Courier'}</span>
+                    <span className="text-[#725B38] font-bold uppercase text-[10px]">
+                      {order.deliveryCharge === 0 ? 'Free' : formatPrice(order.deliveryCharge)}
+                    </span>
                   </div>
 
                   <div className="pt-3 border-t border-[#E4E2DF] flex justify-between items-baseline">
@@ -259,7 +224,7 @@ export const PaymentStatusView: React.FC = () => {
                       <span className="font-editorial text-base text-[#1A1412] font-bold block">
                         Total Paid
                       </span>
-                      <span className="text-[10px] text-[#807571] uppercase">Settled in NGN via Card</span>
+                      <span className="text-[10px] text-[#807571] uppercase">Settled in NGN via Paystack</span>
                     </div>
                     <span className="font-editorial text-2xl text-[#1A1412] font-bold">
                       {formatPrice(order.total)}
@@ -280,7 +245,7 @@ export const PaymentStatusView: React.FC = () => {
                     Need A Printed Copy?
                   </p>
                   <h3 className="font-editorial text-base text-[#1A1412] font-medium">
-                    Official Tax Invoice & Certificate
+                    Order Receipt
                   </h3>
                 </div>
                 <button
@@ -288,7 +253,7 @@ export const PaymentStatusView: React.FC = () => {
                   className="h-10 px-4 bg-[#EFEEEB] hover:bg-[#EAE8E5] text-[#1A1412] rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>Invoice</span>
+                  <span>Print</span>
                 </button>
               </div>
             </div>
@@ -314,12 +279,12 @@ export const PaymentStatusView: React.FC = () => {
             </h1>
 
             <p className="text-xs sm:text-sm text-[#4E4542] max-w-lg mx-auto mb-6 leading-relaxed">
-              We are currently confirming your transaction with <strong className="text-[#1A1412]">Paystack</strong>. Please hold on — this typically takes 10 to 45 seconds depending on Nigerian interbank switches.
+              We are currently confirming your transaction with <strong className="text-[#1A1412]">Paystack</strong>. Bank transfers can take a few minutes to confirm. Your order is saved — check again shortly, or contact us on WhatsApp with your reference.
             </p>
 
             <div className="bg-[#F5F3F0] p-4 rounded-lg text-left max-w-md mx-auto mb-8 space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-[#807571]">Draft Reference:</span>
+                <span className="text-[#807571]">Reference:</span>
                 <span className="font-mono text-[#1A1412] font-bold">{order.paymentReference}</span>
               </div>
               <div className="flex justify-between">
@@ -328,13 +293,13 @@ export const PaymentStatusView: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-[#807571]">Payment Channel:</span>
-                <span className="text-[#1A1412]">NIBSS / Instant Bank Transfer</span>
+                <span className="text-[#1A1412]">{order.paymentChannel}</span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
-                onClick={handleRefreshVerification}
+                onClick={() => recheckPayment(order)}
                 disabled={isVerifying}
                 className="w-full sm:w-auto h-12 px-8 bg-[#1A1412] hover:bg-[#201A18] text-white rounded text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-sm"
               >
@@ -377,11 +342,11 @@ export const PaymentStatusView: React.FC = () => {
             </h1>
 
             <p className="text-xs sm:text-sm text-[#4E4542] max-w-lg mx-auto mb-6 leading-relaxed">
-              Your card or bank declined this transaction. No funds were debited, and order <strong className="text-[#1A1412]">#{order.orderNumber}</strong> has been temporarily held for you so you don’t lose your reserved raw bundle selection.
+              Paystack reported that payment for order <strong className="text-[#1A1412]">#{order.orderNumber}</strong> was not completed. Your bag has been kept so you can try again.
             </p>
 
             <div className="p-4 bg-[#F5F3F0] rounded-lg text-left max-w-md mx-auto mb-8 border border-[#EAE8E5]">
-              <p className="text-xs font-bold text-[#1A1412]">Declined by Card Issuer (Bank Code 51)</p>
+              <p className="text-xs font-bold text-[#1A1412]">Reference: <span className="font-mono">{order.paymentReference}</span></p>
               <p className="text-xs text-[#807571] mt-1 leading-relaxed">
                 Common reasons include daily web spend limits, temporary bank switch outages, or 3D Secure OTP timeouts.
               </p>
@@ -389,7 +354,7 @@ export const PaymentStatusView: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
-                onClick={() => openPaystackPayment(order)}
+                onClick={() => setCurrentView('checkout')}
                 className="w-full sm:w-auto h-12 px-8 bg-[#1A1412] hover:bg-[#201A18] text-white rounded text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-sm"
               >
                 <span>Try Payment Again</span>

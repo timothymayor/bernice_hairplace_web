@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ShopProvider, useShop } from './context/ShopContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
-import { PaystackModal } from './components/PaystackModal';
 import { QuickViewModal } from './components/QuickViewModal';
 import { WhatsAppConciergeModal } from './components/WhatsAppConciergeModal';
 import { CustomOrderModal } from './views/CustomOrderModal';
@@ -12,14 +11,59 @@ import { CatalogView } from './views/CatalogView';
 import { ProductDetailView } from './views/ProductDetailView';
 import { CheckoutView } from './views/CheckoutView';
 import { PaymentStatusView } from './views/PaymentStatusView';
-import { AccountView } from './views/AccountView';
+import { OrdersView } from './views/OrdersView';
 import { CollectionsView } from './views/CollectionsView';
 import { AboutView } from './views/AboutView';
-import { DocumentationView } from './views/DocumentationView';
-import { CheckCircle, AlertCircle, Info, Sparkles } from 'lucide-react';
+import { CheckCircle, AlertCircle, Info } from 'lucide-react';
+
+const VIEW_PATHS: Record<string, string> = {
+  home: '/',
+  shop: '/shop',
+  'bundles-wigs': '/bundles-wigs',
+  collections: '/collections',
+  about: '/about',
+  checkout: '/checkout',
+  'payment-status': '/order-status',
+  orders: '/orders',
+};
 
 const MainAppContent: React.FC = () => {
-  const { currentView, toast } = useShop();
+  const { currentView, setCurrentView, selectedProduct, setSelectedProduct, getProductBySlug, toast } = useShop();
+  const isFirstSync = useRef(true);
+
+  // Keep the URL in sync with the current view so Back/refresh and shared product links work.
+  useEffect(() => {
+    const applyPath = () => {
+      const path = window.location.pathname.replace(/\/+$/, '') || '/';
+      const productMatch = path.match(/^\/product\/([^/]+)$/);
+      if (productMatch) {
+        const product = getProductBySlug(decodeURIComponent(productMatch[1]));
+        if (product) {
+          setSelectedProduct(product);
+          setCurrentView('product-detail');
+          return;
+        }
+      }
+      const view = Object.keys(VIEW_PATHS).find((v) => VIEW_PATHS[v] === path);
+      setCurrentView(view ?? (path === '/account' ? 'orders' : 'home'));
+    };
+    applyPath();
+    window.addEventListener('popstate', applyPath);
+    return () => window.removeEventListener('popstate', applyPath);
+  }, []);
+
+  useEffect(() => {
+    // The first run happens before the view parsed from the URL is applied; skip it.
+    if (isFirstSync.current) {
+      isFirstSync.current = false;
+      return;
+    }
+    const path =
+      currentView === 'product-detail' && selectedProduct
+        ? `/product/${selectedProduct.slug}`
+        : (VIEW_PATHS[currentView] ?? '/');
+    if (window.location.pathname !== path) window.history.pushState(null, '', path);
+  }, [currentView, selectedProduct]);
 
   // Scroll to top on view changes
   useEffect(() => {
@@ -39,14 +83,13 @@ const MainAppContent: React.FC = () => {
         return <CheckoutView />;
       case 'payment-status':
         return <PaymentStatusView />;
+      case 'orders':
       case 'account':
-        return <AccountView />;
+        return <OrdersView />;
       case 'collections':
         return <CollectionsView />;
       case 'about':
         return <AboutView />;
-      case 'docs':
-        return <DocumentationView />;
       default:
         return <HomeView />;
     }
@@ -57,7 +100,7 @@ const MainAppContent: React.FC = () => {
       <Header />
 
       {/* Main View Display with top padding for fixed header */}
-      <main className="flex-1 w-full pt-20">
+      <main className="flex-1 w-full pt-28">
         {renderView()}
       </main>
 
@@ -65,7 +108,6 @@ const MainAppContent: React.FC = () => {
 
       {/* Slide-over & Modals */}
       <CartDrawer />
-      <PaystackModal />
       <QuickViewModal />
       <WhatsAppConciergeModal />
       <CustomOrderModal />

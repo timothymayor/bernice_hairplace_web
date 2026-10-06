@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
+import { supabase } from '../lib/supabase';
 import { ShieldCheck, ArrowRight, Check } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -7,14 +8,29 @@ export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
+    const trimmed = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       showToast('Invalid Email', 'Please enter a valid email address.', 'error');
       return;
     }
+    if (!supabase) {
+      showToast('Sign-up unavailable', 'Please try again later.', 'error');
+      return;
+    }
+    setIsSubmitting(true);
+    const { error } = await supabase.from('newsletter_subscribers').insert({ email: trimmed });
+    setIsSubmitting(false);
+    // 23505 = already subscribed, which is fine.
+    if (error && error.code !== '23505') {
+      showToast('Could not subscribe', 'Please try again in a moment.', 'error');
+      return;
+    }
     setIsSubscribed(true);
-    showToast('Subscribed to Private Registry', 'You will receive priority notices for raw donor harvests.', 'success');
+    showToast('You are on the list', 'We will email you about new arrivals and restocks.', 'success');
   };
 
   return (
@@ -32,7 +48,7 @@ export const Footer: React.FC = () => {
 
             <div className="pt-2">
               <label className="block text-[11px] uppercase tracking-widest text-[#725B38] font-bold mb-2">
-                Private Editorial Dispatch
+                New Arrivals & Restocks
               </label>
               <form onSubmit={handleSubscribe} className="flex max-w-md shadow-sm">
                 <input
@@ -44,6 +60,7 @@ export const Footer: React.FC = () => {
                 />
                 <button
                   type="submit"
+                  disabled={isSubmitting || isSubscribed}
                   className="h-11 px-6 bg-[#1A1412] hover:bg-[#201A18] text-white text-xs font-semibold uppercase tracking-wider rounded-r transition-colors shrink-0 flex items-center gap-1.5"
                 >
                   {isSubscribed ? (
@@ -53,7 +70,7 @@ export const Footer: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <span>Subscribe</span>
+                      <span>Join</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -124,7 +141,7 @@ export const Footer: React.FC = () => {
               <li>
                 <button
                   onClick={() => {
-                    setCurrentView('account');
+                    setCurrentView('orders');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="hover:text-[#1A1412] transition-colors text-left"
@@ -165,12 +182,12 @@ export const Footer: React.FC = () => {
               <li>
                 <button
                   onClick={() => {
-                    setCurrentView('docs');
+                    setCurrentView('orders');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="text-[#725B38] font-semibold hover:underline"
+                  className="hover:text-[#1A1412] transition-colors text-left"
                 >
-                  Technical Architecture & API Docs
+                  My Orders
                 </button>
               </li>
             </ul>
@@ -191,7 +208,7 @@ export const Footer: React.FC = () => {
               </span>
               <p className="text-xs text-[#4E4542] flex items-center gap-1.5 font-medium">
                 <ShieldCheck className="w-4 h-4 text-[#725B38]" />
-                Secured locally via Paystack • Naira & USD Accepted
+                Secured by Paystack • Local & international cards
               </p>
             </div>
           </div>

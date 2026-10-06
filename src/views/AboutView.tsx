@@ -117,7 +117,7 @@ export const AboutView: React.FC = () => {
             <div className="lg:col-span-6">
               <div className="aspect-[4/3] bg-white rounded-2xl overflow-hidden shadow-xl border border-[#EAE8E5]">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA8Ct7tbVWgvCidkt56BtQok6gnyuKUXsp_5egmlwYuWtWhGzt4Njl2m2zqqIs9yG869a35fJwbYKC2rg99PFQe8EPd2AsaJdDn8FLtZcsdpiQsjmzjpqjVDXbVnly2xTj0jNw_CEV8ffuwN5pf_hrnWhkNY-dUGXNkCy4KnFLM2LXBmbLll1OJEbJ1YQqvDKNkMFEV0pE3gsPbNnlvfIZSKf6c9-QlpVIDFj5a9SemBllIRcrTAyl"
+                  src="/images/img-25-6142051ada.jpg"
                   alt="Victoria Island Atelier Studio"
                   className="w-full h-full object-cover"
                 />

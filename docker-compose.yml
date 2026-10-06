@@ -1,0 +1,16 @@
+# Usage: create .env with the VITE_* values (see .env.example), then `docker compose up --build`
+# and open http://localhost:8080
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
+        VITE_WHATSAPP_NUMBER: ${VITE_WHATSAPP_NUMBER:-}
+    environment:
+      # Deployment that runs the /api payment functions (your Vercel URL).
+      API_UPSTREAM: ${API_UPSTREAM:-https://bernicehairplace.com}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

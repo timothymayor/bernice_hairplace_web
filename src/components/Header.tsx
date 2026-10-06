@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useShop } from '../context/ShopContext';
-import { Search, ShoppingBag, Menu, X, ShieldCheck, User as UserIcon, BookOpen, ArrowRight, Sparkles } from 'lucide-react';
+import { FREE_DELIVERY_THRESHOLD } from '../lib/pricing';
+import { Search, ShoppingBag, Menu, X, ShieldCheck, User as UserIcon, ArrowRight, Sparkles } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const {
@@ -8,9 +9,6 @@ export const Header: React.FC = () => {
     setIsCartOpen,
     currentView,
     setCurrentView,
-    user,
-    isLoggedIn,
-    loginWithGoogle,
     currency,
     setCurrency,
     searchQuery,
@@ -18,6 +16,9 @@ export const Header: React.FC = () => {
     products,
     setSelectedProduct,
     formatPrice,
+    user,
+    isAuthConfigured,
+    signInWithGoogle,
   } = useShop();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -29,7 +30,6 @@ export const Header: React.FC = () => {
     { label: 'Collections', view: 'collections' },
     { label: 'Bundles & Wigs', view: 'bundles-wigs' },
     { label: 'About', view: 'about' },
-    { label: 'Docs / Architecture', view: 'docs', icon: true },
   ];
 
   // Live matching products for autocomplete preview
@@ -71,10 +71,10 @@ export const Header: React.FC = () => {
   return (
     <>
       {/* Top Announcement Bar */}
-      <div className="bg-[#201A18] text-[#FAF8F5] px-4 sm:px-10 py-2 text-center flex items-center justify-center gap-2 border-b border-[#2D2623]/40 z-50 relative">
+      <div className="fixed top-0 left-0 right-0 h-8 bg-[#201A18] text-[#FAF8F5] px-4 sm:px-10 text-center flex items-center justify-center gap-2 border-b border-[#2D2623]/40 z-50">
         <span className="w-1.5 h-1.5 rounded-full bg-[#C5A880] animate-pulse"></span>
         <p className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase">
-          Complimentary Express Lagos Delivery on Orders Over ₦150,000
+          Free Express Lagos Delivery on Orders Over {formatPrice(FREE_DELIVERY_THRESHOLD)}
         </p>
       </div>
 
@@ -98,16 +98,11 @@ export const Header: React.FC = () => {
               }}
               className="flex items-center gap-3 group text-left"
             >
-              <img
-                src="https://lh3.googleusercontent.com/aida/AEtjO1WmDz5BViSwqywijLWVRyiCAakBOYXtIZt94yZtV_3L5rkxWOzd5IqHiTTAKgn2_NaMmEsjgsTmm8xHoH603aBP35qJc2an2rLHXLSDfRA3NzH_2ylUWyGDoM3fyAG-D5TKfkFd297FN7avuarEhlK3k46Vhi10Ekt4-osB8KYUdFNnzBGAFdL92_Iqy41msamxcyN4hIolDiWfMlaO9H6LPEoJmsMAhMiMNllBJPfQYPboDOodhxC8rQU"
-                alt="Bernice Hairplace Wordmark Logo"
-                className="h-7 sm:h-8 w-auto object-contain"
-              />
-              <div className="hidden xl:block">
-                <span className="font-editorial text-xl font-medium tracking-tight text-[#1A1412] uppercase block">
+              <div>
+                <span className="font-editorial text-base sm:text-xl font-medium tracking-tight text-[#1A1412] uppercase block whitespace-nowrap">
                   Bernice Hairplace
                 </span>
-                <span className="text-[9px] font-sans uppercase tracking-[0.25em] text-[#725B38] block">
+                <span className="hidden sm:block text-[9px] font-sans uppercase tracking-[0.25em] text-[#725B38]">
                   Lagos • Luxury Raw Hair
                 </span>
               </div>
@@ -129,9 +124,8 @@ export const Header: React.FC = () => {
                     isActive
                       ? 'text-[#1A1412] border-b-2 border-[#1A1412] font-bold'
                       : 'text-[#4E4542] hover:text-[#1A1412]'
-                  } ${link.icon ? 'flex items-center gap-1.5 text-[#725B38]' : ''}`}
+                  }`}
                 >
-                  {link.icon && <BookOpen className="w-3.5 h-3.5" />}
                   {link.label}
                 </button>
               );
@@ -176,33 +170,43 @@ export const Header: React.FC = () => {
               <Search className="w-5 h-5" />
             </button>
 
-            {/* Account / VIP User */}
-            {isLoggedIn && user ? (
+            {/* Account */}
+            {user ? (
               <button
                 onClick={() => {
-                  setCurrentView('account');
+                  setCurrentView('orders');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="flex items-center gap-2 text-[#4E4542] hover:text-[#1A1412] transition-colors p-1.5 rounded hover:bg-[#EFEEEB]"
-                title="Account Dashboard"
+                aria-label="My account and orders"
+                title="My account and orders"
               >
-                <img
-                  src={user.avatarUrl}
-                  alt={user.firstName}
-                  className="w-8 h-8 rounded-full object-cover border border-[#C5A880]"
-                />
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    className="w-8 h-8 rounded-full object-cover border border-[#C5A880]"
+                  />
+                ) : (
+                  <span className="w-8 h-8 rounded-full bg-[#1A1412] text-white text-xs font-bold flex items-center justify-center">
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </span>
+                )}
                 <span className="hidden xl:inline text-xs uppercase tracking-wider font-semibold text-[#1A1412]">
-                  {user.firstName}
+                  {user.fullName.split(' ')[0]}
                 </span>
               </button>
             ) : (
-              <button
-                onClick={loginWithGoogle}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#EFEEEB] hover:bg-[#EAE8E5] text-[#1A1412] text-xs font-semibold uppercase tracking-wider rounded transition-colors"
-              >
-                <UserIcon className="w-4 h-4 text-[#725B38]" />
-                <span className="hidden sm:inline">Sign In</span>
-              </button>
+              isAuthConfigured && (
+                <button
+                  onClick={() => signInWithGoogle()}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-[#EFEEEB] hover:bg-[#EAE8E5] text-[#1A1412] text-xs font-semibold uppercase tracking-wider rounded transition-colors"
+                >
+                  <UserIcon className="w-4 h-4 text-[#725B38]" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </button>
+              )
             )}
 
             {/* Bag Button */}

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
+import { whatsappLink } from '../config';
 import { X, MessageSquare, Send, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export const WhatsAppConciergeModal: React.FC = () => {
-  const { isConciergeOpen, setIsConciergeOpen, user, showToast } = useShop();
+  const { isConciergeOpen, setIsConciergeOpen, showToast } = useShop();
 
   const [serviceType, setServiceType] = useState('lace_color_match');
   const [hairLength, setHairLength] = useState('24" Waist');
@@ -12,10 +13,8 @@ export const WhatsAppConciergeModal: React.FC = () => {
   if (!isConciergeOpen) return null;
 
   const handleOpenWhatsApp = () => {
-    const message = encodeURIComponent(
-      `Hello Bernice Hairplace Atelier VI! I would like to inquire about ${serviceType.replace(/_/g, ' ')} for length ${hairLength}. Client: ${user?.firstName || 'Client'} (${user?.phone || 'Lagos'}). Notes: ${notes || 'None'}`
-    );
-    window.open(`https://wa.me/2348128904120?text=${message}`, '_blank');
+    const message = `Hello Bernice Hairplace! I would like to inquire about ${serviceType.replace(/_/g, ' ')} for length ${hairLength}. Notes: ${notes || 'None'}`;
+    window.open(whatsappLink(message), '_blank', 'noopener');
     setIsConciergeOpen(false);
     showToast('Connecting to Master Colorist', 'Opening WhatsApp VIP line...', 'success');
   };
